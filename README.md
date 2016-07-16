@@ -1,2 +1,2 @@
 # BCDownloadManager
-For managing downloading operation of breakpoint continuingly by FMDB.
+Using FMDB to manage continuing breakpoint automatically for download task.
