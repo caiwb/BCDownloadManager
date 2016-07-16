@@ -10,4 +10,18 @@
 
 @interface BCDownloadOperation : AFDownloadRequestOperation
 
+@property (nonatomic, copy) NSString *fileName;
+@property (nonatomic, copy) NSString *downloadUrl;
+
+@property (nonatomic, assign) long long downloadedBytes;
+@property (nonatomic, assign) long long totalBytes;
+
+@property (nonatomic, assign) BOOL completed;
+@property (nonatomic, assign) BOOL isPause;
+
+@property (nonatomic, strong) NSMutableDictionary *taskInfo;
+@property (nonatomic, copy) NSString *taskInfoString;
+
+- (instancetype)initWithRequest:(NSMutableURLRequest *)urlRequest HTTPHeaders:(NSDictionary *)HTTPHeaders targetPath:(NSString *)targetPath shouldResume:(BOOL)shouldResume;
+
 @end

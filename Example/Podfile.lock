@@ -24,6 +24,7 @@ PODS:
     - AFNetworking/NSURLSession
   - BCDownloadManager (0.1.0):
     - AFDownloadRequestOperation (~> 2.0.1)
+    - AFNetworking (~> 2.0)
     - FMDB (~> 2.6.2)
   - FMDB (2.6.2):
     - FMDB/standard (= 2.6.2)
@@ -39,7 +40,7 @@ EXTERNAL SOURCES:
 SPEC CHECKSUMS:
   AFDownloadRequestOperation: 748a1643423e1ddb23f2178f778087d4f0ae8ac7
   AFNetworking: cb8d14a848e831097108418f5d49217339d4eb60
-  BCDownloadManager: 00710e948413ea896f9edcf71fca2e7a61d3e637
+  BCDownloadManager: 415c4291b40b570b89f81e79dc3f03d05b9dad10
   FMDB: 854a0341b4726e53276f2a8996f06f1b80f9259a
 
 COCOAPODS: 0.39.0
