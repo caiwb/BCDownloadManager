@@ -1,0 +1,14 @@
+PODS:
+  - BCDownloadManager (0.1.0)
+
+DEPENDENCIES:
+  - BCDownloadManager (from `../`)
+
+EXTERNAL SOURCES:
+  BCDownloadManager:
+    :path: ../
+
+SPEC CHECKSUMS:
+  BCDownloadManager: 4a16a49bb8367d519a2a6303199c5ac0a884225d
+
+COCOAPODS: 0.39.0
