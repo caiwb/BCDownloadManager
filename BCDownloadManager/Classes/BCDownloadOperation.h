@@ -20,7 +20,7 @@
 @property (nonatomic, assign) BOOL isPause;
 
 @property (nonatomic, strong) NSMutableDictionary *HTTPHeaders;
-@property (nonatomic, strong) NSMutableDictionary *taskInfo;
+@property (nonatomic, strong) NSDictionary *taskInfo;
 @property (nonatomic, copy) NSString *taskInfoString;
 
 - (instancetype)initWithRequest:(NSMutableURLRequest *)urlRequest HTTPHeaders:(NSDictionary *)HTTPHeaders targetPath:(NSString *)targetPath shouldResume:(BOOL)shouldResume;

@@ -36,11 +36,17 @@ static NSString *targetPath = nil;
                                                          HTTPHeaders:@{@"Referer": @"http://live.youdao.com"}
                                                           targetPath:[targetPath stringByAppendingString:@"/fileName.mp4"]
                                                         shouldResume:YES];
+        _downloadTask.taskInfo = @{@"name": @"bocai"};
         
         [[BCDownloadManager sharedManager] addOperation:_downloadTask];
     }
     [_downloadTask addObserver:self forKeyPath:@"downloadedBytes" options:0 context:nil];
     
+}
+
+- (void)touchesBegan:(NSSet<UITouch *> *)touches withEvent:(UIEvent *)event
+{
+    [[BCDownloadManager sharedManager] deleteOperation:_downloadTask];
 }
 
 - (void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object change:(NSDictionary<NSString *,id> *)change context:(void *)context
