@@ -54,7 +54,10 @@
             BOOL completed              = [rs boolForColumn:@"completed"];
             NSString *taskInfoString    = [rs stringForColumn:@"taskInfo"];
             
-            BCDownloadOperation *downloadTask = [[BCDownloadOperation alloc] initWithRequest:[[NSMutableURLRequest alloc] initWithURL:[NSURL URLWithString:downloadUrl]] HTTPHeaders:weakSelf.HTTPHeaders targetPath:[weakSelf.targetFolder stringByAppendingString:[NSString stringWithFormat:@"/%@", fileName]] shouldResume:YES];
+            BCDownloadOperation *downloadTask = [[BCDownloadOperation alloc] initWithRequest:[[NSMutableURLRequest alloc] initWithURL:[NSURL URLWithString:downloadUrl]]
+                                                                                 HTTPHeaders:weakSelf.HTTPHeaders
+                                                                                  targetPath:[weakSelf.targetFolder stringByAppendingString:[NSString stringWithFormat:@"/%@", fileName]]
+                                                                                shouldResume:YES];
             downloadTask.shouldOverwrite = YES;
             downloadTask.fileName        = fileName;
             downloadTask.downloadUrl     = downloadUrl;
@@ -82,6 +85,12 @@
 - (void)addOperation:(BCDownloadOperation *)task
 {
     NSParameterAssert(task);
+    NSAssert(self.maxDownloadingOperation >= self.downloadingTasks.count, @"Exceed the maximum number of downloading!");
+    
+    if (self.maxDownloadingOperation <= self.downloadingTasks.count)
+    {
+        return;
+    }
     
     [self updateDownloadDataWithTask:task];
     self.HTTPHeaders = self.HTTPHeaders ?: task.HTTPHeaders;
@@ -107,24 +116,24 @@
 
 - (void)deleteOperation:(BCDownloadOperation *)task
 {
+    NSParameterAssert(task);
+    
     [task cancel];
-    BOOL suc;
+    
     if (!task.completed)
     {
         [self.downloadingTasks removeObject:task];
-        suc = [[NSFileManager defaultManager] removeItemAtPath:task.tempPath error:nil];
+        [[NSFileManager defaultManager] removeItemAtPath:task.tempPath error:nil];
     }
     else
     {
         [self.hasDownloadedTasks removeObject:task];
-        suc = [[NSFileManager defaultManager] removeItemAtPath:task.targetPath error:nil];
+        [[NSFileManager defaultManager] removeItemAtPath:task.targetPath error:nil];
     }
     [self.dbQueue inDatabase:^(FMDatabase *db) {
         dbSuc = [db executeUpdate:@"delete from DownloadOperationList where fileName = ?", task.fileName];
     }];
 }
-
-
 
 - (void)updateDownloadDataWithTask:(BCDownloadOperation *)downloadTask
 {
@@ -146,7 +155,6 @@
         [downloadTask setProgressiveDownloadProgressBlock:^(AFDownloadRequestOperation *operation, NSInteger bytesRead, long long totalBytesRead, long long totalBytesExpected, long long totalBytesReadForFile, long long totalBytesExpectedToReadForFile) {
             
             CGFloat progress = (CGFloat)totalBytesReadForFile / totalBytesExpectedToReadForFile;
-            NSLog(@"%f", progress);
             
             if (!updateValue)
             {
@@ -173,7 +181,7 @@
             [[NSFileManager defaultManager] removeItemAtPath:weakTask.tempPath error:nil];
             
         } failure:^(AFHTTPRequestOperation *operation, NSError *error) {
-            
+            NSAssert(!error, @"error: %@", error);
         }];
     }];
 }
@@ -271,7 +279,10 @@
         BOOL completed              = [rs boolForColumn:@"completed"];
         NSString *taskInfoString    = [rs stringForColumn:@"taskInfo"];
         
-        downloadTask = [[BCDownloadOperation alloc] initWithRequest:[[NSMutableURLRequest alloc] initWithURL:[NSURL URLWithString:downloadUrl]] HTTPHeaders:weakSelf.HTTPHeaders targetPath:[weakSelf.targetFolder stringByAppendingString:[NSString stringWithFormat:@"/%@", fileName]] shouldResume:YES];
+        downloadTask = [[BCDownloadOperation alloc] initWithRequest:[[NSMutableURLRequest alloc] initWithURL:[NSURL URLWithString:downloadUrl]]
+                                                        HTTPHeaders:weakSelf.HTTPHeaders
+                                                         targetPath:[weakSelf.targetFolder stringByAppendingString:[NSString stringWithFormat:@"/%@", fileName]]
+                                                       shouldResume:YES];
         downloadTask.shouldOverwrite    = YES;
         downloadTask.fileName           = fileName;
         downloadTask.downloadUrl        = downloadUrl;
@@ -293,7 +304,10 @@
 {
     [downloadTask cancel];
     
-    BCDownloadOperation *newDownloadTask = [[BCDownloadOperation alloc] initWithRequest:[[NSMutableURLRequest alloc] initWithURL:[NSURL URLWithString:downloadTask.downloadUrl]] targetPath:downloadTask.targetPath shouldResume:YES];
+    BCDownloadOperation *newDownloadTask = [[BCDownloadOperation alloc] initWithRequest:[[NSMutableURLRequest alloc] initWithURL:[NSURL URLWithString:downloadTask.downloadUrl]]
+                                                    HTTPHeaders:self.HTTPHeaders
+                                                     targetPath:downloadTask.targetPath
+                                                   shouldResume:YES];
     
     newDownloadTask.name              = downloadTask.name;
     newDownloadTask.downloadUrl       = downloadTask.downloadUrl;
