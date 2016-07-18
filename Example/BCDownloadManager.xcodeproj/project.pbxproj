@@ -7,7 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		16BF2088211DF99A08F4B1F1 /* Pods_BCDownloadManager_Example.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 015689E84E478356730ADD13 /* Pods_BCDownloadManager_Example.framework */; };
+		3508A5EB58AA923059329A28 /* libPods-BCDownloadManager_Example.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 95FA49619610A9019AB970C9 /* libPods-BCDownloadManager_Example.a */; };
+		394EA7DB1D3C6E2900356146 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 394EA7DA1D3C6E2900356146 /* LaunchScreen.storyboard */; };
 		6003F58E195388D20070C39A /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6003F58D195388D20070C39A /* Foundation.framework */; };
 		6003F590195388D20070C39A /* CoreGraphics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6003F58F195388D20070C39A /* CoreGraphics.framework */; };
 		6003F592195388D20070C39A /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6003F591195388D20070C39A /* UIKit.framework */; };
@@ -33,8 +34,8 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
-		015689E84E478356730ADD13 /* Pods_BCDownloadManager_Example.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_BCDownloadManager_Example.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		201C9DAAA32D6AE2897844E6 /* Pods-BCDownloadManager_Example.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-BCDownloadManager_Example.release.xcconfig"; path = "Pods/Target Support Files/Pods-BCDownloadManager_Example/Pods-BCDownloadManager_Example.release.xcconfig"; sourceTree = "<group>"; };
+		394EA7DA1D3C6E2900356146 /* LaunchScreen.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; path = LaunchScreen.storyboard; sourceTree = "<group>"; };
 		6003F58A195388D20070C39A /* BCDownloadManager_Example.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = BCDownloadManager_Example.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		6003F58D195388D20070C39A /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
 		6003F58F195388D20070C39A /* CoreGraphics.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreGraphics.framework; path = System/Library/Frameworks/CoreGraphics.framework; sourceTree = SDKROOT; };
@@ -52,6 +53,7 @@
 		6003F5AF195388D20070C39A /* XCTest.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = XCTest.framework; path = Library/Frameworks/XCTest.framework; sourceTree = DEVELOPER_DIR; };
 		7C689FCCB2ECB22592279B5C /* LICENSE */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text; name = LICENSE; path = ../LICENSE; sourceTree = "<group>"; };
 		873B8AEA1B1F5CCA007FD442 /* Main.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; path = Main.storyboard; sourceTree = "<group>"; };
+		95FA49619610A9019AB970C9 /* libPods-BCDownloadManager_Example.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-BCDownloadManager_Example.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		A70740CBBFB3171B8B930B12 /* BCDownloadManager.podspec */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text; name = BCDownloadManager.podspec; path = ../BCDownloadManager.podspec; sourceTree = "<group>"; };
 		C2165917D6E742227077646D /* Pods-BCDownloadManager_Example.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-BCDownloadManager_Example.debug.xcconfig"; path = "Pods/Target Support Files/Pods-BCDownloadManager_Example/Pods-BCDownloadManager_Example.debug.xcconfig"; sourceTree = "<group>"; };
 		FE755FABB9058D5CA175A501 /* README.md */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = net.daringfireball.markdown; name = README.md; path = ../README.md; sourceTree = "<group>"; };
@@ -65,7 +67,7 @@
 				6003F590195388D20070C39A /* CoreGraphics.framework in Frameworks */,
 				6003F592195388D20070C39A /* UIKit.framework in Frameworks */,
 				6003F58E195388D20070C39A /* Foundation.framework in Frameworks */,
-				16BF2088211DF99A08F4B1F1 /* Pods_BCDownloadManager_Example.framework in Frameworks */,
+				3508A5EB58AA923059329A28 /* libPods-BCDownloadManager_Example.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -109,7 +111,7 @@
 				6003F58F195388D20070C39A /* CoreGraphics.framework */,
 				6003F591195388D20070C39A /* UIKit.framework */,
 				6003F5AF195388D20070C39A /* XCTest.framework */,
-				015689E84E478356730ADD13 /* Pods_BCDownloadManager_Example.framework */,
+				95FA49619610A9019AB970C9 /* libPods-BCDownloadManager_Example.a */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -119,10 +121,8 @@
 			children = (
 				6003F59C195388D20070C39A /* BCAppDelegate.h */,
 				6003F59D195388D20070C39A /* BCAppDelegate.m */,
-				873B8AEA1B1F5CCA007FD442 /* Main.storyboard */,
 				6003F5A5195388D20070C39A /* BCViewController.h */,
 				6003F5A6195388D20070C39A /* BCViewController.m */,
-				6003F5A8195388D20070C39A /* Images.xcassets */,
 				6003F594195388D20070C39A /* Supporting Files */,
 			);
 			name = "Example for BCDownloadManager";
@@ -132,6 +132,9 @@
 		6003F594195388D20070C39A /* Supporting Files */ = {
 			isa = PBXGroup;
 			children = (
+				6003F5A8195388D20070C39A /* Images.xcassets */,
+				873B8AEA1B1F5CCA007FD442 /* Main.storyboard */,
+				394EA7DA1D3C6E2900356146 /* LaunchScreen.storyboard */,
 				6003F595195388D20070C39A /* BCDownloadManager-Info.plist */,
 				6003F596195388D20070C39A /* InfoPlist.strings */,
 				6003F599195388D20070C39A /* main.m */,
@@ -240,6 +243,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				873B8AEB1B1F5CCA007FD442 /* Main.storyboard in Resources */,
+				394EA7DB1D3C6E2900356146 /* LaunchScreen.storyboard in Resources */,
 				6003F5A9195388D20070C39A /* Images.xcassets in Resources */,
 				6003F598195388D20070C39A /* InfoPlist.strings in Resources */,
 			);
@@ -420,10 +424,11 @@
 			baseConfigurationReference = C2165917D6E742227077646D /* Pods-BCDownloadManager_Example.debug.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				ASSETCATALOG_COMPILER_LAUNCHIMAGE_NAME = LaunchImage;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "BCDownloadManager/BCDownloadManager-Prefix.pch";
 				INFOPLIST_FILE = "BCDownloadManager/BCDownloadManager-Info.plist";
+				IPHONEOS_DEPLOYMENT_TARGET = 8.3;
 				MODULE_NAME = ExampleApp;
 				PRODUCT_BUNDLE_IDENTIFIER = "org.cocoapods.demo.${PRODUCT_NAME:rfc1034identifier}";
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -436,10 +441,11 @@
 			baseConfigurationReference = 201C9DAAA32D6AE2897844E6 /* Pods-BCDownloadManager_Example.release.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				ASSETCATALOG_COMPILER_LAUNCHIMAGE_NAME = LaunchImage;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "BCDownloadManager/BCDownloadManager-Prefix.pch";
 				INFOPLIST_FILE = "BCDownloadManager/BCDownloadManager-Info.plist";
+				IPHONEOS_DEPLOYMENT_TARGET = 8.3;
 				MODULE_NAME = ExampleApp;
 				PRODUCT_BUNDLE_IDENTIFIER = "org.cocoapods.demo.${PRODUCT_NAME:rfc1034identifier}";
 				PRODUCT_NAME = "$(TARGET_NAME)";

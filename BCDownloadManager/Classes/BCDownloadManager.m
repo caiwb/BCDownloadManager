@@ -13,6 +13,7 @@
 @interface BCDownloadManager ()
 
 @property (nonatomic, strong) FMDatabaseQueue *dbQueue;
+@property (nonatomic, strong) FMDatabase *db;
 @property (nonatomic, strong) NSString *dbPath;
 
 @end
@@ -32,11 +33,6 @@
     return manager;
 }
 
-+ (void)load
-{
-    [self sharedManager];
-}
-
 - (instancetype)init
 {
     if (self = [super init])
@@ -48,41 +44,37 @@
         
         __weak BCDownloadManager *weakSelf = self;
         
-        [self.dbQueue inDatabase:^(FMDatabase *db) {
-            FMResultSet *rs = [db executeQuery:@"select * from DownloadOperationList"];
-            while ([rs next])
+        FMResultSet *rs = [self.db executeQuery:@"select * from DownloadOperationList"];
+        while ([rs next])
+        {
+            NSString *fileName          = [rs stringForColumn:@"fileName"];
+            NSString *downloadUrl       = [rs stringForColumn:@"downloadUrl"];
+            long long downloadedBytes   = [rs longLongIntForColumn:@"downloadedBytes"];
+            long long totalBytes        = [rs longLongIntForColumn:@"totalBytes"];
+            BOOL completed              = [rs boolForColumn:@"completed"];
+            NSString *taskInfoString    = [rs stringForColumn:@"taskInfo"];
+            
+            BCDownloadOperation *downloadTask = [[BCDownloadOperation alloc] initWithRequest:[[NSMutableURLRequest alloc] initWithURL:[NSURL URLWithString:downloadUrl]] HTTPHeaders:weakSelf.HTTPHeaders targetPath:[weakSelf.targetFolder stringByAppendingString:[NSString stringWithFormat:@"/%@", fileName]] shouldResume:YES];
+            downloadTask.shouldOverwrite = YES;
+            downloadTask.fileName        = fileName;
+            downloadTask.downloadUrl     = downloadUrl;
+            downloadTask.downloadedBytes = downloadedBytes;
+            downloadTask.totalBytes      = totalBytes;
+            downloadTask.completed       = completed;
+            downloadTask.isPause         = NO;
+            downloadTask.taskInfoString  = taskInfoString;
+            
+            if (completed)
             {
-                NSString *fileName          = [rs stringForColumn:@"fileName"];
-                NSString *downloadUrl       = [rs stringForColumn:@"downloadUrl"];
-                long long downloadedBytes   = [rs longLongIntForColumn:@"downloadedBytes"];
-                long long totalBytes        = [rs longLongIntForColumn:@"totalBytes"];
-                BOOL completed              = [rs boolForColumn:@"completed"];
-                NSString *taskInfoString    = [rs stringForColumn:@"taskInfo"];
-                
-                BCDownloadOperation *downloadTask = [[BCDownloadOperation alloc] initWithRequest:[[NSMutableURLRequest alloc] initWithURL:[NSURL URLWithString:downloadUrl]] HTTPHeaders:weakSelf.HTTPHeaders targetPath:[weakSelf.targetPath stringByAppendingString:[NSString stringWithFormat:@"/%@", fileName]] shouldResume:YES];
-                downloadTask.shouldOverwrite = YES;
-                downloadTask.fileName        = fileName;
-                downloadTask.downloadUrl     = downloadUrl;
-                downloadTask.downloadedBytes = downloadedBytes;
-                downloadTask.totalBytes      = totalBytes;
-                downloadTask.completed       = completed;
-                downloadTask.isPause         = NO;
-                downloadTask.taskInfoString  = taskInfoString;
-                
-                if (completed)
-                {
-                    [weakSelf.hasDownloadedTasks addObject:downloadTask];
-                }
-                else
-                {
-                    downloadTask.isPause = YES;
-                    [weakSelf updateDownloadDataWithTask:downloadTask];
-                    [weakSelf.downloadingTasks addObject:downloadTask];
-                    [weakSelf.operationQueue addOperation:downloadTask];
-                    [downloadTask pause];
-                }
+                [weakSelf.hasDownloadedTasks addObject:downloadTask];
             }
-        }];
+            else
+            {
+                [weakSelf updateDownloadDataWithTask:downloadTask];
+                [weakSelf.downloadingTasks addObject:downloadTask];
+                [weakSelf.operationQueue addOperation:downloadTask];
+            }
+        }
     }
     return self;
 }
@@ -92,7 +84,23 @@
     NSParameterAssert(task);
     
     [self updateDownloadDataWithTask:task];
+    self.HTTPHeaders = self.HTTPHeaders ?: task.HTTPHeaders;
     
+    NSMutableArray *pathArr = [[task.targetPath componentsSeparatedByString:@"/"] mutableCopy];
+    [pathArr removeLastObject];
+    self.targetFolder = self.targetFolder ?: [pathArr componentsJoinedByString:@"/"];
+    self.tempFolder = self.tempFolder ?: [self.targetFolder stringByAppendingString:@"/temps"];
+    
+    if (![[NSFileManager defaultManager] fileExistsAtPath:self.tempFolder])
+    {
+        [[NSFileManager defaultManager] createDirectoryAtPath:self.tempFolder withIntermediateDirectories:YES attributes:nil error:nil];
+    }
+    
+    if (self.HTTPHeaders && !task.HTTPHeaders)
+    {
+        task = [[BCDownloadOperation alloc] initWithRequest:task.request HTTPHeaders:self.HTTPHeaders targetPath:task.targetPath shouldResume:task.shouldResume];
+    }
+
     [self.operationQueue addOperation:task];
     [self.downloadingTasks addObject:task];
 }
@@ -138,6 +146,7 @@
         [downloadTask setProgressiveDownloadProgressBlock:^(AFDownloadRequestOperation *operation, NSInteger bytesRead, long long totalBytesRead, long long totalBytesExpected, long long totalBytesReadForFile, long long totalBytesExpectedToReadForFile) {
             
             CGFloat progress = (CGFloat)totalBytesReadForFile / totalBytesExpectedToReadForFile;
+            NSLog(@"%f", progress);
             
             if (!updateValue)
             {
@@ -169,42 +178,59 @@
     }];
 }
 
+- (NSString *)dbPath
+{
+    if (!_dbPath)
+    {
+        NSString *documentDirectory = [NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES) firstObject];
+        _dbPath = [documentDirectory stringByAppendingString:@"/BCDownloadDataBase.sqlite"];
+    }
+    return _dbPath;
+}
+
 - (FMDatabaseQueue *)dbQueue
 {
     if (!_dbQueue)
     {
-        NSString *documentDirectory = [NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES) firstObject];
-        _dbPath = [documentDirectory stringByAppendingString:@"/BCDownloadDataBase.sqlite"];
+        _dbQueue = [[FMDatabaseQueue alloc] initWithPath:self.dbPath];
         
-        if (![[NSFileManager defaultManager] fileExistsAtPath:_dbPath])
-        {
-            [[NSFileManager defaultManager] createDirectoryAtPath:_dbPath withIntermediateDirectories:YES attributes:nil error:nil];
-        }
-        _dbQueue = [[FMDatabaseQueue alloc] initWithPath:_dbPath];
-        
-        
-        [self createTablesIfNeeded];
+        [self.dbQueue inDatabase:^(FMDatabase *db) {
+            [self createTablesIfNeeded:db];
+        }];
     }
     return _dbQueue;
 }
 
-- (void)createTablesIfNeeded
+- (FMDatabase *)db
 {
-    [self.dbQueue inDatabase:^(FMDatabase *db) {
-        if (![db tableExists:@"DownloadOperationList"])
+    if (!_db)
+    {
+        _db = [FMDatabase databaseWithPath:self.dbPath];
+        
+        if ([_db open])
         {
-            [db executeStatements:@"create table DownloadOperationList (fileName text, downloadUrl text, downloadedBytes bigint, totalBytes bigint, completed integer, taskInfo text)"];
+            [self createTablesIfNeeded:_db];
         }
-    }];
+    }
+    return _db;
 }
 
-- (NSString *)targetPath
+
+- (void)createTablesIfNeeded:(FMDatabase *)db
 {
-    if (!_targetPath)
+    if (![db tableExists:@"DownloadOperationList"])
     {
-        _targetPath = [[NSSearchPathForDirectoriesInDomains(NSApplicationSupportDirectory, NSUserDomainMask, YES) lastObject] stringByAppendingPathComponent:@"/BCDownloadFile"];
+        [db executeStatements:@"create table DownloadOperationList (fileName text, downloadUrl text, downloadedBytes bigint, totalBytes bigint, completed integer, taskInfo text)"];
     }
-    return _targetPath;
+}
+
+- (NSString *)targetFolder
+{
+    if (!_targetFolder)
+    {
+        _targetFolder = [[NSSearchPathForDirectoriesInDomains(NSApplicationSupportDirectory, NSUserDomainMask, YES) lastObject] stringByAppendingPathComponent:@"/BCDownloadFile"];
+    }
+    return _targetFolder;
 }
 
 - (BOOL)hasDownloaded:(NSString *)fileName
@@ -234,36 +260,32 @@
     __block BCDownloadOperation *downloadTask;
     
     __weak BCDownloadManager *weakSelf = self;
-    
-    [self.dbQueue inDatabase:^(FMDatabase *db) {
         
-        FMResultSet *rs = [db executeQuery:@"select * from DownloadOperationList where name = ?", fileName];
-        while([rs next])
-        {
-            NSString *fileName          = [rs stringForColumn:@"fileName"];
-            NSString *downloadUrl       = [rs stringForColumn:@"downloadUrl"];
-            long long downloadedBytes   = [rs longLongIntForColumn:@"downloadedBytes"];
-            long long totalBytes        = [rs longLongIntForColumn:@"totalBytes"];
-            BOOL completed              = [rs boolForColumn:@"completed"];
-            NSString *taskInfoString    = [rs stringForColumn:@"taskInfo"];
-            
-            downloadTask = [[BCDownloadOperation alloc] initWithRequest:[[NSMutableURLRequest alloc] initWithURL:[NSURL URLWithString:downloadUrl]] HTTPHeaders:weakSelf.HTTPHeaders targetPath:[weakSelf.targetPath stringByAppendingString:[NSString stringWithFormat:@"/%@", fileName]] shouldResume:YES];
-            downloadTask.shouldOverwrite    = YES;
-            downloadTask.fileName           = fileName;
-            downloadTask.downloadUrl        = downloadUrl;
-            downloadTask.downloadedBytes    = downloadedBytes;
-            downloadTask.totalBytes         = totalBytes;
-            downloadTask.completed          = completed;
-            downloadTask.taskInfoString     = taskInfoString;
-            downloadTask.isPause            = NO;
-            
-            [weakSelf updateDownloadDataWithTask:downloadTask];
-            [weakSelf.downloadingTasks addObject:downloadTask];
-            [weakSelf.hasDownloadedTasks removeObject:task];
-            [weakSelf.operationQueue addOperation:downloadTask];
-        }
-
-    }];
+    FMResultSet *rs = [self.db executeQuery:@"select * from DownloadOperationList where name = ?", fileName];
+    while([rs next])
+    {
+        NSString *fileName          = [rs stringForColumn:@"fileName"];
+        NSString *downloadUrl       = [rs stringForColumn:@"downloadUrl"];
+        long long downloadedBytes   = [rs longLongIntForColumn:@"downloadedBytes"];
+        long long totalBytes        = [rs longLongIntForColumn:@"totalBytes"];
+        BOOL completed              = [rs boolForColumn:@"completed"];
+        NSString *taskInfoString    = [rs stringForColumn:@"taskInfo"];
+        
+        downloadTask = [[BCDownloadOperation alloc] initWithRequest:[[NSMutableURLRequest alloc] initWithURL:[NSURL URLWithString:downloadUrl]] HTTPHeaders:weakSelf.HTTPHeaders targetPath:[weakSelf.targetFolder stringByAppendingString:[NSString stringWithFormat:@"/%@", fileName]] shouldResume:YES];
+        downloadTask.shouldOverwrite    = YES;
+        downloadTask.fileName           = fileName;
+        downloadTask.downloadUrl        = downloadUrl;
+        downloadTask.downloadedBytes    = downloadedBytes;
+        downloadTask.totalBytes         = totalBytes;
+        downloadTask.completed          = completed;
+        downloadTask.taskInfoString     = taskInfoString;
+        downloadTask.isPause            = NO;
+        
+        [weakSelf updateDownloadDataWithTask:downloadTask];
+        [weakSelf.downloadingTasks addObject:downloadTask];
+        [weakSelf.hasDownloadedTasks removeObject:task];
+        [weakSelf.operationQueue addOperation:downloadTask];
+    }
     return downloadTask;
 }
 

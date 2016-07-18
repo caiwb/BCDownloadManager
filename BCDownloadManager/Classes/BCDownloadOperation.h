@@ -19,6 +19,7 @@
 @property (nonatomic, assign) BOOL completed;
 @property (nonatomic, assign) BOOL isPause;
 
+@property (nonatomic, strong) NSMutableDictionary *HTTPHeaders;
 @property (nonatomic, strong) NSMutableDictionary *taskInfo;
 @property (nonatomic, copy) NSString *taskInfoString;
 

@@ -15,7 +15,8 @@
 @property (nonatomic, assign) NSUInteger maxDownloadingOperation;
 @property (nonatomic, strong) NSMutableArray<BCDownloadOperation *> *hasDownloadedTasks;
 @property (nonatomic, strong) NSMutableArray<BCDownloadOperation *> *downloadingTasks;
-@property (nonatomic, copy) NSString *targetPath;
+@property (nonatomic, copy) NSString *targetFolder;
+@property (nonatomic, copy) NSString *tempFolder;
 @property (nonatomic, copy) NSMutableDictionary *HTTPHeaders;
 
 + (BCDownloadManager *)sharedManager;

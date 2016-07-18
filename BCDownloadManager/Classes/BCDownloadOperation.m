@@ -19,19 +19,41 @@
             [urlRequest setValue:HTTPHeaders[key] forHTTPHeaderField:key];
         }
     }
-    return [super initWithRequest:urlRequest targetPath:targetPath shouldResume:shouldResume];
+    if (self = [super initWithRequest:urlRequest targetPath:targetPath shouldResume:shouldResume])
+    {
+        self.HTTPHeaders = HTTPHeaders;
+        self.downloadUrl = urlRequest.URL.absoluteString;
+    }
+    return self;
 }
 
 - (NSString *)tempPath
 {
     NSMutableArray *arr = [[self.targetPath componentsSeparatedByString:@"/"] mutableCopy];
-    [arr insertObject:@"temps" atIndex:arr.count - 2];
+    [arr insertObject:@"temps" atIndex:arr.count - 1];
     return [arr componentsJoinedByString:@"/"];
+}
+
+- (NSString *)fileName
+{
+    if (!_fileName)
+    {
+        NSMutableArray *arr = [[self.targetPath componentsSeparatedByString:@"/"] mutableCopy];
+        _fileName = [arr lastObject];
+    }
+    return _fileName;
+}
+
+- (void)setDownloadedBytes:(long long)downloadedBytes
+{
+    [self willChangeValueForKey:@"downloadedBytes"];
+    _downloadedBytes = downloadedBytes;
+    [self didChangeValueForKey:@"downloadedBytes"];
 }
 
 - (NSMutableDictionary *)taskInfo
 {
-    if (!_taskInfo && self.taskInfoString && ![self.taskInfoString isEqualToString:@""])
+    if (!_taskInfo && _taskInfoString && ![_taskInfoString isEqualToString:@""])
     {
         NSData *data = [self.taskInfoString dataUsingEncoding:NSUTF8StringEncoding];
         if (data)
@@ -44,7 +66,7 @@
 
 - (NSString *)taskInfoString
 {
-    if (!_taskInfoString && self.taskInfo)
+    if (!_taskInfoString && _taskInfo)
     {
         _taskInfoString = @"";
         NSData *data = [NSJSONSerialization dataWithJSONObject:self.taskInfo options:0 error:nil];
