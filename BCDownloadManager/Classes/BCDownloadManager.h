@@ -30,4 +30,7 @@
 - (BCDownloadOperation *)resumeOperation:(BCDownloadOperation *)task;
 - (BCDownloadOperation *)redownloadOperation:(BCDownloadOperation *)task;
 
+- (void)startAllTasks;
+- (void)pauseAllTasks;
+
 @end

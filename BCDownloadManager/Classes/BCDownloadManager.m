@@ -76,6 +76,8 @@
                 [weakSelf updateDownloadDataWithTask:downloadTask];
                 [weakSelf.downloadingTasks addObject:downloadTask];
                 [weakSelf.operationQueue addOperation:downloadTask];
+                [downloadTask pause];
+                downloadTask.isPause = YES;
             }
         }
     }
@@ -93,7 +95,7 @@
     }
     
     [self updateDownloadDataWithTask:task];
-    self.HTTPHeaders = self.HTTPHeaders ?: task.HTTPHeaders;
+    self.HTTPHeaders = self.HTTPHeaders ?: task.HTTPHeaders.mutableCopy;
     
     NSMutableArray *pathArr = [[task.targetPath componentsSeparatedByString:@"/"] mutableCopy];
     [pathArr removeLastObject];
@@ -107,7 +109,7 @@
     
     if (self.HTTPHeaders && !task.HTTPHeaders)
     {
-        task = [[BCDownloadOperation alloc] initWithRequest:task.request HTTPHeaders:self.HTTPHeaders targetPath:task.targetPath shouldResume:task.shouldResume];
+        task = [[BCDownloadOperation alloc] initWithRequest:task.request.mutableCopy HTTPHeaders:self.HTTPHeaders targetPath:task.targetPath shouldResume:task.shouldResume];
     }
 
     [self.operationQueue addOperation:task];
@@ -302,8 +304,6 @@
 
 - (BCDownloadOperation *)redownloadOperation:(BCDownloadOperation *)downloadTask
 {
-    [downloadTask cancel];
-    
     BCDownloadOperation *newDownloadTask = [[BCDownloadOperation alloc] initWithRequest:[[NSMutableURLRequest alloc] initWithURL:[NSURL URLWithString:downloadTask.downloadUrl]]
                                                     HTTPHeaders:self.HTTPHeaders
                                                      targetPath:downloadTask.targetPath
@@ -317,12 +317,32 @@
     newDownloadTask.taskInfoString    = downloadTask.taskInfoString;
     newDownloadTask.isPause           = downloadTask.isPause;
     
+    [downloadTask cancel];
+    
     [self updateDownloadDataWithTask:newDownloadTask];
     [self.downloadingTasks addObject:newDownloadTask];
     [self.downloadingTasks removeObject:downloadTask];
     [self.operationQueue addOperation:newDownloadTask];
     
     return newDownloadTask;
+}
+
+- (void)startAllTasks
+{
+    for (BCDownloadOperation *task in self.downloadingTasks)
+    {
+        task.isPause = NO;
+        [task resume];
+    }
+}
+
+- (void)pauseAllTasks
+{
+    for (BCDownloadOperation *task in self.downloadingTasks)
+    {
+        task.isPause = YES;
+        [task pause];
+    }
 }
 
 @end

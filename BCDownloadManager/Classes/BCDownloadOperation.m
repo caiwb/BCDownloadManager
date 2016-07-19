@@ -46,9 +46,7 @@
 
 - (void)setDownloadedBytes:(long long)downloadedBytes
 {
-    [self willChangeValueForKey:@"downloadedBytes"];
     _downloadedBytes = downloadedBytes;
-    [self didChangeValueForKey:@"downloadedBytes"];
 }
 
 - (NSMutableDictionary *)taskInfo
@@ -61,7 +59,7 @@
             _taskInfo = [NSJSONSerialization JSONObjectWithData:data options:0 error:nil];
         }
     }
-    return _taskInfo;
+    return _taskInfo.mutableCopy;
 }
 
 - (NSString *)taskInfoString
