@@ -11,56 +11,28 @@
 #import "BCDownloadOperation.h"
 #import "BCDownloadButton.h"
 
-#define SCREEN_HEIGHT [UIScreen mainScreen].bounds.size.height
-#define SCREEN_WIDTH [UIScreen mainScreen].bounds.size.width
-
-
 @interface BCViewController ()
 
+@property (strong, nonatomic) NSString *targetPath;
 @property (strong, nonatomic) BCDownloadOperation *downloadTask;
-@property (strong, nonatomic) UIButton *deleteButton;
 @property (strong, nonatomic) BCDownloadButton *downloadButton;
-@property (strong, nonatomic) UILabel *progressLabel;
+@property (strong, nonatomic) UIButton *deleteButton;
 
 @end
 
 @implementation BCViewController
 
-static NSString *targetPath = nil;
-
-- (void)viewDidLoad
+- (NSString *)targetPath
 {
-    [super viewDidLoad];
-	
-    targetPath = [[NSSearchPathForDirectoriesInDomains(NSApplicationSupportDirectory, NSUserDomainMask, YES) firstObject] stringByAppendingPathComponent:@"/BCDownloadFile"];
-    if (![[NSFileManager defaultManager] fileExistsAtPath:targetPath])
+    if (! _targetPath)
     {
-        [[NSFileManager defaultManager] createDirectoryAtPath:targetPath withIntermediateDirectories:YES attributes:nil error:nil];
+        _targetPath = [[NSSearchPathForDirectoriesInDomains(NSApplicationSupportDirectory, NSUserDomainMask, YES) firstObject] stringByAppendingPathComponent:@"/BCDownloadFile"];
+        if (![[NSFileManager defaultManager] fileExistsAtPath:_targetPath])
+        {
+            [[NSFileManager defaultManager] createDirectoryAtPath:_targetPath withIntermediateDirectories:YES attributes:nil error:nil];
+        }
     }
-
-    _downloadButton = [BCDownloadButton new];
-    [self.view addSubview:_downloadButton];
-    _downloadButton.progress = 0;
-    _downloadButton.isPause = YES;
-    _downloadButton.color = [UIColor cyanColor];
-    [_downloadButton addTarget:self action:@selector(download) forControlEvents:UIControlEventTouchUpInside];
-    
-    _progressLabel = [UILabel new];
-    [self.view addSubview:_progressLabel];
-    
-    _deleteButton = [UIButton buttonWithType:UIButtonTypeCustom];
-    [self.view addSubview:_deleteButton];
-    [_deleteButton setTitle:@"delete" forState:UIControlStateNormal];
-    [_deleteButton setTitleColor:[UIColor cyanColor] forState:UIControlStateNormal];
-    [_deleteButton addTarget:self action:@selector(delete) forControlEvents:UIControlEventTouchUpInside];
-    
-    BOOL hasDownloaded = [[BCDownloadManager sharedManager] hasDownloaded:@"fileName.mp4"];
-    _deleteButton.enabled = hasDownloaded;
-    _downloadButton.enabled = !hasDownloaded;
-    
-    [_progressLabel setFrame:CGRectMake((SCREEN_WIDTH - 100)/ 2, 250, 100, 50)];
-    [_downloadButton setFrame:CGRectMake(100, 350, 40, 40)];
-    [_deleteButton setFrame:CGRectMake(SCREEN_WIDTH - 100, 350, 60, 40)];
+    return _targetPath;
 }
 
 - (BCDownloadOperation *)downloadTask
@@ -79,44 +51,66 @@ static NSString *targetPath = nil;
         {
             _downloadTask = [[BCDownloadOperation alloc] initWithRequest:[[NSMutableURLRequest alloc] initWithURL:[NSURL URLWithString:@"http://stream.youdao.com/private/xuetang/pushstation.1477_1_3_screen_2016_02_20_12_07_08.mp4"]]
                                                              HTTPHeaders:@{@"Referer": @"http://live.youdao.com"}
-                                                              targetPath:[targetPath stringByAppendingString:@"/fileName.mp4"]
+                                                              targetPath:[self.targetPath stringByAppendingString:@"/fileName.mp4"]
                                                             shouldResume:YES];
             _downloadTask.taskInfo = @{@"name": @"bocai"};
-            
-            [[BCDownloadManager sharedManager] addOperation:_downloadTask];
         }
-        [_downloadTask resume];
-        [_downloadTask addObserver:self forKeyPath:@"downloadedBytes" options:NSKeyValueObservingOptionNew context:nil];
     }
     
     return _downloadTask;
 }
 
-- (void)download
+- (void)viewDidLoad
 {
-    [_downloadTask resume];
-}
-
-- (void)delete
-{
-    [[BCDownloadManager sharedManager] deleteOperation:_downloadTask];
+    [super viewDidLoad];
     
-    _downloadButton.enabled = YES;
-    _deleteButton.enabled = NO;
+    [self generateButtons];
 }
 
-- (void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object change:(NSDictionary<NSString *,id> *)change context:(void *)context
+- (void)generateButtons
 {
-    if ([keyPath isEqualToString:@"downloadedBytes"] && [object isKindOfClass:[BCDownloadOperation class]])
+    _downloadButton = [BCDownloadButton new];
+    [self.view addSubview:_downloadButton];
+    _downloadButton.task = self.downloadTask;
+    _downloadButton.color = [UIColor magentaColor];
+    [_downloadButton addTarget:self action:@selector(downloadControl:) forControlEvents:UIControlEventTouchUpInside];
+    
+    _deleteButton = [UIButton buttonWithType:UIButtonTypeCustom];
+    [self.view addSubview:_deleteButton];
+    [_deleteButton setTitle:@"delete" forState:UIControlStateNormal];
+    [_deleteButton setTitleColor:[UIColor magentaColor] forState:UIControlStateNormal];
+    [_deleteButton setTitleColor:[UIColor lightGrayColor] forState:UIControlStateDisabled];
+    _deleteButton.enabled = _downloadButton.task.isReady ? NO : YES;
+    [_deleteButton addTarget:self action:@selector(delete:) forControlEvents:UIControlEventTouchUpInside];
+    
+    _downloadButton.frame = CGRectMake(100, 350, 70, 70);
+    _deleteButton.frame = CGRectMake([UIScreen mainScreen].bounds.size.width - 150, 340, 60, 50);
+}
+
+- (void)downloadControl:(BCDownloadButton *)button
+{
+    if ([self.downloadTask isReady])
     {
-        _progressLabel.text = [NSString stringWithFormat:@"%lld/%lld",_downloadTask.downloadedBytes, _downloadTask.totalBytes];
-        [_progressLabel sizeToFit];
+        button.task = self.downloadTask;
+        [[BCDownloadManager sharedManager] addOperation:self.downloadTask];
+        _deleteButton.enabled = YES;
+    }
+    else if ([self.downloadTask isExecuting])
+    {
+        [self.downloadTask pause];
+    }
+    else if ([self.downloadTask isPaused])
+    {
+        [self.downloadTask resume];
     }
 }
 
-- (void)dealloc
+- (void)delete:(id)sender
 {
-    [_downloadTask removeObserver:self forKeyPath:@"downloadedBytes"];
+    [[BCDownloadManager sharedManager] deleteOperation:self.downloadTask];
+    self.downloadTask = nil;
+    _downloadButton.task = nil;
+    _deleteButton.enabled = NO;
 }
 
 @end
