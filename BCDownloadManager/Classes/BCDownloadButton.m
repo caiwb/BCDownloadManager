@@ -29,9 +29,28 @@
     [self setNeedsDisplay];
 }
 
+- (void)setTask:(BCDownloadOperation *)task
+{
+    [_task removeObserver:self forKeyPath:@"downloadedBytes"];
+    [_task removeObserver:self forKeyPath:@"isPaused"];
+    
+    _task = task;
+    
+    self.progress = (CGFloat)task.downloadedBytes/task.totalBytes;
+    self.isPause = task ? (task.isReady ? NO : task.isPaused) : NO;
+    
+    [task addObserver:self forKeyPath:@"downloadedBytes" options:NSKeyValueObservingOptionNew context:nil];
+    [task addObserver:self forKeyPath:@"isPaused" options:NSKeyValueObservingOptionNew context:nil];
+}
+
+- (UIColor *)disableColor
+{
+    return _disableColor ?: [UIColor lightGrayColor];
+}
+
 - (void)drawRect:(CGRect)rect
 {
-    UIColor *curColor = self.enabled ? self.color : [UIColor grayColor];
+    UIColor *curColor = self.enabled ? self.color : self.disableColor;
     
     [super drawRect:rect];
     
@@ -60,6 +79,24 @@
         [curColor setFill];
         [p fill];
     }
+}
+
+- (void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object change:(NSDictionary<NSString *,id> *)change context:(void *)context
+{
+    if ([keyPath isEqualToString:@"downloadedBytes"])
+    {
+        self.progress = (CGFloat)self.task.downloadedBytes/self.task.totalBytes;
+    }
+    else if ([keyPath isEqualToString:@"isPaused"])
+    {
+        self.isPause = self.task.isPaused;
+    }
+}
+
+- (void)dealloc
+{
+    [_task removeObserver:self forKeyPath:@"downloadedBytes"];
+    [_task removeObserver:self forKeyPath:@"isPaused"];
 }
 
 @end

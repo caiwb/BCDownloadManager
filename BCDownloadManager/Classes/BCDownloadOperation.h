@@ -17,7 +17,6 @@
 @property (nonatomic, assign) long long totalBytes;
 
 @property (nonatomic, assign) BOOL completed;
-@property (nonatomic, assign) BOOL isPause;
 
 @property (nonatomic, strong) NSDictionary *HTTPHeaders;
 @property (nonatomic, strong) NSDictionary *taskInfo;

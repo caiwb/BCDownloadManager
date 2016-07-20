@@ -64,7 +64,6 @@
             downloadTask.downloadedBytes = downloadedBytes;
             downloadTask.totalBytes      = totalBytes;
             downloadTask.completed       = completed;
-            downloadTask.isPause         = NO;
             downloadTask.taskInfoString  = taskInfoString;
             
             if (completed)
@@ -77,7 +76,6 @@
                 [weakSelf.downloadingTasks addObject:downloadTask];
                 [weakSelf.operationQueue addOperation:downloadTask];
                 [downloadTask pause];
-                downloadTask.isPause = YES;
             }
         }
     }
@@ -120,6 +118,7 @@
 {
     NSParameterAssert(task);
     
+    [task pause];
     [task cancel];
     
     if (!task.completed)
@@ -292,7 +291,6 @@
         downloadTask.totalBytes         = totalBytes;
         downloadTask.completed          = completed;
         downloadTask.taskInfoString     = taskInfoString;
-        downloadTask.isPause            = NO;
         
         [weakSelf updateDownloadDataWithTask:downloadTask];
         [weakSelf.downloadingTasks addObject:downloadTask];
@@ -315,7 +313,6 @@
     newDownloadTask.totalBytes        = downloadTask.totalBytes;
     newDownloadTask.completed         = NO;
     newDownloadTask.taskInfoString    = downloadTask.taskInfoString;
-    newDownloadTask.isPause           = downloadTask.isPause;
     
     [downloadTask cancel];
     
@@ -325,24 +322,6 @@
     [self.operationQueue addOperation:newDownloadTask];
     
     return newDownloadTask;
-}
-
-- (void)startAllTasks
-{
-    for (BCDownloadOperation *task in self.downloadingTasks)
-    {
-        task.isPause = NO;
-        [task resume];
-    }
-}
-
-- (void)pauseAllTasks
-{
-    for (BCDownloadOperation *task in self.downloadingTasks)
-    {
-        task.isPause = YES;
-        [task pause];
-    }
 }
 
 @end
